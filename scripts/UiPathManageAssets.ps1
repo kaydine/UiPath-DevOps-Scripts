@@ -122,20 +122,25 @@ SYNTAX
     #log file
     $debugLog = "$scriptPath\orchestrator-test-run.log"
     
-    #region Verifying UiPath CLI installation
-    $cliVersion = "1.0.7985.19721"; #CLI Version (Script was tested on this latest version at the time)
+    #Verifying UiPath CLI installation
+    $packageName = "UiPath.CLI.Windows"
+    $cliVersion = "22.10.8418.30339"; #CLI Version (Script was tested on this latest version at the time)
     
-    $uipathCLI = "$scriptPath\uipathcli\$cliVersion\lib\net461\uipcli.exe"
+    $uipathCLIFolder = "$scriptPath\uipathcli"
+    $uipathCLI = "$uipathCLIFolder\tools\uipcli.exe"
     if (-not(Test-Path -Path $uipathCLI -PathType Leaf)) {
         WriteLog "UiPath CLI does not exist in this folder. Attempting to download it..."
         try {
-            if (-not(Test-Path -Path "$scriptPath\uipathcli\$cliVersion" -PathType Leaf)){
-                New-Item -Path "$scriptPath\uipathcli\$cliVersion" -ItemType "directory" -Force | Out-Null
+            if (-not(Test-Path -Path "$uipathCLIFolder" -PathType Leaf)){
+                New-Item -Path "$uipathCLIFolder" -ItemType "directory" -Force | Out-Null
             }
             #Download UiPath CLI
-            Invoke-WebRequest "https://www.myget.org/F/uipath-dev/api/v2/package/UiPath.CLI/$cliVersion" -OutFile "$scriptPath\\uipathcli\\$cliVersion\\cli.zip";
-            Expand-Archive -LiteralPath "$scriptPath\\uipathcli\\$cliVersion\\cli.zip" -DestinationPath "$scriptPath\\uipathcli\\$cliVersion";
-            WriteLog "UiPath CLI is downloaded and extracted in folder $scriptPath\uipathcli\\$cliVersion"
+            $feedUrl = "https://pkgs.dev.azure.com/uipath/Public.Feeds/_packaging/UiPath-Official/nuget/v3/flat2/$packageName/$cliVersion/$packageName.$cliVersion.nupkg"
+            $cliZip = "$uipathCLIFolder\cli.zip"
+            Invoke-WebRequest "$feedUrl" -OutFile "$cliZip";
+            Expand-Archive -LiteralPath "$cliZip" -DestinationPath "$uipathCLIFolder";
+            WriteLog "UiPath CLI is downloaded and extracted in folder $uipathCLIFolder"
+            Remove-Item $cliZip
             if (-not(Test-Path -Path $uipathCLI -PathType Leaf)) {
                 WriteLog "Unable to locate uipath cli after it is downloaded."
                 exit 1
@@ -149,7 +154,7 @@ SYNTAX
     }
     WriteLog "-----------------------------------------------------------------------------"
     WriteLog "uipcli location :   $uipathCLI"
-    #endregion Verifying UiPath CLI installation
+    #END Verifying UiPath CLI installation
     
     $ParamList = New-Object 'Collections.Generic.List[string]'
     
